@@ -29,7 +29,7 @@ git URL을 입력하면 해당 레포를 클론/갱신하고 **코드 자체를 
 | 에이전트 프레임워크 | deepagents (LangChain, LangGraph 기반) |
 | 모델 | OpenAI 고정. 기본 `openai:gpt-5.4`, `EVALUATOR_MODEL` env로 교체 가능. `OPENAI_API_KEY` 사용 |
 | 인터페이스 | CLI TUI — `rich` 기반 스트리밍 REPL 채팅 |
-| 영속화 | 로컬 SQLite (평가 이력 + 대화 체크포인트) |
+| 영속화 | 로컬 SQLite 단일 파일. 평가 이력은 자체 스키마(§5.2), 대화 메모리는 LangGraph `SqliteSaver`(별도 테이블, 동일 DB 파일) |
 | 증분 diff 단위 | **파일 단위** (git diff가 파일 기반이라 자연스러움) |
 | 언어 | Python 3.11+ |
 | 코어 분리 | 에이전트·도구·영속화는 UI 무관 라이브러리, `cli.py`는 얇은 클라이언트 |
@@ -60,7 +60,7 @@ git URL을 입력하면 해당 레포를 클론/갱신하고 **코드 자체를 
 ### 4.3 `tech-fit` (기술적합성·오버엔지니어링) ★핵심
 
 - 역할: 주요 기술/패턴별로 (a) 목적부합 (b) 관용적 정확성 (c) 과/소설계를 `file:line` 근거 + 근거 설명과 함께 판정
-- 도구: 타깃 코드 리드(`read_file`, grep), 베스트프랙티스 웹검색(`WebSearch`/`WebFetch` 래퍼)
+- 도구: 타깃 코드 리드(`read_file`, grep), 베스트프랙티스 웹검색 — deepagents 런타임용 **커스텀 도구**로 구현(실제 검색 백엔드: Tavily 또는 DuckDuckGo, env로 설정, API 키 없으면 우아하게 비활성화). Claude Code 빌트인 `WebSearch`/`WebFetch`는 배포 런타임에 없으므로 사용하지 않음
 
 ## 5. 영속화 (SQLite)
 
