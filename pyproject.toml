@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "project-evaluator"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Conversational agent that evaluates the technology decisions of a git repo"
 requires-python = ">=3.11"
 dependencies = [
@@ -23,6 +23,9 @@ dev = ["pytest"]
 [project.scripts]
 pe = "project_evaluator.cli:main"
 project-evaluator = "project_evaluator.cli:main"
+
+[tool.hatch.version]
+path = "src/project_evaluator/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/project_evaluator"]
