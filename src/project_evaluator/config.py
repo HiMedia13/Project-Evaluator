@@ -13,6 +13,8 @@ DEFAULT_SKIP_DIRS = {
     ".idea", ".gradle", "vendor", ".next", "out",
 }
 
+DEFAULT_MODEL = "openai:gpt-5.4"
+
 
 def _bool(value: str | None, default: bool) -> bool:
     if value is None:
@@ -46,7 +48,7 @@ class Config:
             or (Path.home() / ".project-evaluator")
         ).expanduser()
         return cls(
-            model=os.environ.get("EVALUATOR_MODEL", "openai:gpt-5.4"),
+            model=os.environ.get("EVALUATOR_MODEL", DEFAULT_MODEL),
             data_dir=data_dir,
             max_files=int(os.environ.get("EVALUATOR_MAX_FILES", "4000")),
             max_file_bytes=int(os.environ.get("EVALUATOR_MAX_FILE_BYTES", "500000")),
@@ -62,6 +64,10 @@ class Config:
 
     def apply_observability_env(self) -> None:
         """Inject LangSmith env. Default on; degrade gracefully without key."""
+        # LangSmith tracing is ON by default by design (user decision). If the
+        # user never set an API key, degrade gracefully (warn once, disable)
+        # rather than crash. LANGSMITH_PROJECT is intentionally only set when
+        # tracing is enabled; when disabled we leave it untouched.
         if self.langsmith_tracing and not os.environ.get("LANGSMITH_API_KEY"):
             logger.warning(
                 "LANGSMITH_TRACING is on but LANGSMITH_API_KEY is unset; "
