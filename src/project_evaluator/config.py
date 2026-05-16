@@ -58,6 +58,13 @@ class Config:
             tavily_api_key=os.environ.get("TAVILY_API_KEY"),
         )
 
+    @classmethod
+    def from_env_for_test(cls, data_dir) -> "Config":
+        """Construct a Config rooted at an explicit data dir (tests only)."""
+        import os
+        os.environ["EVALUATOR_DATA_DIR"] = str(data_dir)
+        return cls.from_env()
+
     def ensure_dirs(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.workspaces_dir.mkdir(parents=True, exist_ok=True)
