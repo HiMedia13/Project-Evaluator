@@ -36,3 +36,15 @@ def test_upsert_repo_is_stable_on_url(tmp_path):
     a = s.upsert_repo("https://x/y.git", "y", "/ws/y")
     b = s.upsert_repo("https://x/y.git", "y", "/ws/y2")
     assert a == b
+
+
+def test_get_last_evaluation_returns_latest(tmp_path):
+    s = Store(tmp_path / "e.db")
+    s.init_db()
+    repo_id = s.upsert_repo("https://x/y.git", "y", "/ws/y")
+    s.create_evaluation(repo_id, "old_sha", "first", "m")
+    s.create_evaluation(repo_id, "new_sha", "second", "m")
+    last = s.get_last_evaluation("https://x/y.git")
+    assert last["commit_sha"] == "new_sha"
+    assert last["overall_summary"] == "second"
+    assert last["created_at"] is not None

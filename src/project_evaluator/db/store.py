@@ -15,16 +15,18 @@ class Store:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA foreign_keys = ON")  # per-connection; applies to all subsequent statements
         return conn
 
     def init_db(self) -> None:
         schema = resources.files("project_evaluator.db").joinpath("schema.sql").read_text()
         with self._connect() as conn:
             conn.executescript(schema)
-            row = conn.execute("SELECT version FROM schema_version").fetchone()
-            if row is None:
-                conn.execute("INSERT INTO schema_version (version) VALUES (?)", (SCHEMA_VERSION,))
+            conn.execute(
+                "INSERT INTO schema_version (version) "
+                "SELECT ? WHERE NOT EXISTS (SELECT 1 FROM schema_version)",
+                (SCHEMA_VERSION,),
+            )
 
     def schema_version(self) -> int:
         with self._connect() as conn:
@@ -94,6 +96,7 @@ class Store:
             return {
                 "evaluation_id": ev["id"],
                 "commit_sha": ev["commit_sha"],
+                "created_at": ev["created_at"],
                 "overall_summary": ev["overall_summary"],
                 "model": ev["model"],
                 "files": [dict(r) for r in files],
